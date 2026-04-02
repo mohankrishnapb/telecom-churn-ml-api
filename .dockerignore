@@ -1,0 +1,7 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.txt  # optional, e.g., requirements if already handled
+archive
