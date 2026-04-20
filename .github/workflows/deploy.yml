@@ -20,7 +20,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_KEY }}
         script: |
-          cd ~
+          cd telecom-churn-ml-api
           git pull origin main
           sudo docker stop $(sudo docker ps -q) || true
           sudo docker rm $(sudo docker ps -aq) || true
