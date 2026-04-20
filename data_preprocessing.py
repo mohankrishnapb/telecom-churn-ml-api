@@ -6,6 +6,7 @@ def load_data(path):
     return df
 
 # Clean data
+
 def clean_data(df):
     # Convert TotalCharges to numeric
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")

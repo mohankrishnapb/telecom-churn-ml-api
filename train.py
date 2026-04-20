@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 # Load
-df = load_data(r"C:\Users\HP\Desktop\CNN_PROJECT\telecom_chrun_project\archive (17)\WA_Fn-UseC_-Telco-Customer-Churn.csv")
+df = load_data( "C:\Users\HP\Desktop\CNN_PROJECT\telecom_chrun_project\archive (17)\WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
 # Clean
 df = clean_data(df)
