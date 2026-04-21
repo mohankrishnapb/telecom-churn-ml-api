@@ -1,34 +1,16 @@
-name: Deploy to EC2 (Docker)
+- name: Deploy Docker to EC2
+  run: |
+    ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+      cd ~/ml-api/telecom-churn-ml-api
 
-on:
-  push:
-    branches:
-      - main
+      git pull origin main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+      docker stop churn-container || true
+      docker rm churn-container || true
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      docker system prune -a -f
 
-      - name: Setup SSH key
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
+      docker build -t churn-api .
 
-      - name: Deploy Docker to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd ~/ml-api/telecom-churn-ml-api
-
-            git pull origin main
-
-            docker stop churn-container || true
-            docker rm churn-container || true
-
-            docker build -t churn-api .
-
-            docker run -d -p 8000:8000 --name churn-container churn-api
-          EOF
+      docker run -d -p 8000:8000 --name churn-container churn-api
+    EOF
