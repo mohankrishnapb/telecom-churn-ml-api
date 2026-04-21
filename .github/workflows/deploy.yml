@@ -2,8 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   deploy:
@@ -13,16 +12,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Deploy to EC2 via SSH
-      uses: appleboy/ssh-action@v0.1.6
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.EC2_KEY }}
-        script: |
-          cd telecom-churn-ml-api
+    - name: Setup SSH key
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+        chmod 600 key.pem
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd ~/ml-api/telecom-churn-ml-api
           git pull origin main
-          sudo docker stop $(sudo docker ps -q) || true
-          sudo docker rm $(sudo docker ps -aq) || true
-          sudo docker build -t churn-api .
-          sudo docker run -d -p 8000:8000 churn-api
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pkill -f uvicorn || true
+          nohup uvicorn app:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+        EOF
