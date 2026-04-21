@@ -1,29 +1,16 @@
-name: Deploy to EC2
+- name: Deploy to EC2
+  run: |
+    ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+      cd ~/ml-api/telecom-churn-ml-api
 
-on:
-  push:
-    branches: [ "main" ]
+      # Create venv if not exists
+      if [ ! -d "venv" ]; then
+        python3 -m venv venv
+      fi
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+      source venv/bin/activate
+      pip install -r requirements.txt
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Setup SSH key
-      run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-        chmod 600 key.pem
-
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd ~/ml-api/telecom-churn-ml-api
-          git pull origin main
-          source venv/bin/activate
-          pip install -r requirements.txt
-          pkill -f uvicorn || true
-          nohup uvicorn app:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-        EOF
+      pkill -f uvicorn || true
+      nohup uvicorn app:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+    EOF
