@@ -1,16 +1,17 @@
-- name: Deploy to EC2
+- name: Deploy Docker to EC2
   run: |
     ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
       cd ~/ml-api/telecom-churn-ml-api
 
-      # Create venv if not exists
-      if [ ! -d "venv" ]; then
-        python3 -m venv venv
-      fi
+      git pull origin main
 
-      source venv/bin/activate
-      pip install -r requirements.txt
+      # Stop old container
+      docker stop churn-container || true
+      docker rm churn-container || true
 
-      pkill -f uvicorn || true
-      nohup uvicorn app:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+      # Build new image
+      docker build -t churn-api .
+
+      # Run new container
+      docker run -d -p 8000:8000 --name churn-container churn-api
     EOF
